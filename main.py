@@ -33,6 +33,7 @@ def detect(cv2img, show_results = False):
 
 def fruit():
     count = 0
+    start_time = time.time()
     while count < 10:
         img = ep_camera.read_cv2_image(strategy = "newest", timeout = 0.5)
         boxes, scores, categories, names = detect(img, show_results = False)
@@ -57,44 +58,47 @@ def fruit():
         if not flag:
             progress.seek(chassis = ep_robot.chassis, pos = 0, speed = 5, target = 580, kx = 4000, ky = 3000, max_speed = 0.15)
         cv2.waitKey(1)
+    end_time = time.time()
     ep_robot.chassis.drive_speed(x = 0, y = 0, z = 0)
     cv2.destroyAllWindows()
+    return end_time - start_time
 
 if __name__ == '__main__':
     ep_arm = ep_robot.robotic_arm
     ep_arm.recenter().wait_for_completed()
+    ep_robot.led.set_led(comp = led.COMP_ALL, r = 255, g = 255, b = 255, effect = led.EFFECT_ON)
+    pid = progress.setup(ep_robot, kp = 145, ki = 6, kd = 105)
+
     ep_robot.gripper.open()
-    pid = progress.setup(ep_robot, kp = 100, ki = 5, kd = 30)
     time.sleep(1)
     result = progress.recognize(camera = ep_robot.camera)
+    # result = "banana"
     ep_robot.led.set_led(comp = led.COMP_ALL, r = 133, g = 24, b = 247, effect = led.EFFECT_ON)
-    progress.move(chassis = ep_robot.chassis, camera = ep_robot.camera, vision = ep_robot.vision, pid_ctrl = pid, target_color = 'red', base_speed = 30, start_angle = 190)
-    fruit()
-    progress.grab(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
-    progress.move(chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=30, start_angle=190)
-    # progress.place(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
-    print("damn mother fucker")
-    #progress.grab(arm = ep_robot.my_arm, gripper = ep_robot.my_gripper)
-    print("catch start")
-    # ep_robot.gripper.open(power=50)
-    #time.sleep(3)
-    #ep_arm.recenter().wait_for_completed()
-    print('damn mother fucker')
-    ep_robot.chassis.drive_speed(x = 0, y = 0, z = 0)
-    print('damn you mother fucker')
-    # time.sleep(1)
-    # gripper.pause()
-    ep_robot.robotic_arm.move(x=0, y=90).wait_for_completed()  # TODO 调参
+    time.sleep(1)
 
-    print('damn')
-    ep_robot.robotic_arm.move(x=140, y=0).wait_for_completed()  # TODO 调参
-    print('damn')
-    ep_robot.gripper.open(power=50)
+    print("first lap begin")
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=180, end_dis = 1000)
+    time_dif = fruit()
+    progress.grab(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
+    ep_robot.chassis.move(x = 0, y = time_dif / 10, z = 0, xy_speed = 0.5).wait_for_completed()
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 100)
+    time.sleep(1)
+    progress.place(arm = ep_robot.robotic_arm, gripper = ep_robot.gripper, chassis= ep_robot.chassis)
+    print("first lap finished")
 
     time.sleep(1)
-    # gripper.pause()
-    ep_robot.robotic_arm.move(x=-140, y=0).wait_for_completed()  # TODO 调参
-    ep_robot.robotic_arm.recenter().wait_for_completed()
-    print("catch end")
-    del ep_robot
-    pass
+
+    print("second lap begin")
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=180, end_dis = 1000)
+    time_dif = fruit()
+    progress.grab(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
+    ep_robot.chassis.move(x = 0, y = time_dif / 10, z = 0, xy_speed = 0.7).wait_for_completed()
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 100)
+    time.sleep(1)
+    progress.place(arm = ep_robot.robotic_arm, gripper = ep_robot.gripper, chassis= ep_robot.chassis)
+    print("second lap finished")
+
+    time.sleep(1)
+
+    ep_camera.stop_video_stream()
+    ep_robot.close()

@@ -12,27 +12,7 @@ line = []
 markers = []
 x, y, w, h = 0, 0, 0, 0
 
-# class EpRobot:
-#     def __init__(self, connect = 'ap', kp = 70, ki = 5, kd = 30):
-#         self.my_robot = robot.Robot()
-#         self.my_robot.initialize(connect)
-#         self.my_chassis = self.my_robot.chassis
-#         self.my_arm = self.my_robot.robotic_arm
-#         self.my_arm.recenter().wait_for_completed()
-#         self.my_gripper = self.my_robot.gripper
-#         self.my_gripper.open()
-#         self.my_vision = self.my_robot.vision
-#         self.my_camera = self.my_robot.camera
-#         self.my_camera.start_video_stream(display = False)
-#         self.pid_ctrl = pid.PID(kp, ki, kd)
-#         self.result = 'apple'
-#         tof.setup()
-#         time.sleep(1)
-#     def __del__(self):
-#         self.my_camera.stop_video_stream()
-#         self.my_robot.close()
-#         tof.end()
-def setup(ep_robot, kp = 70, ki = 5, kd = 30):
+def setup(ep_robot, kp = 50, ki = 2, kd = 20):
     pid_ctrl = pid.PID(kp, ki, kd)
     tof.setup(ep_robot)
     return pid_ctrl
@@ -71,9 +51,9 @@ def seek(chassis, pos, speed = 5, target = 550, kx = 1, ky = 1, max_speed = 0.2)
     y_speed = 0
     distance = tof.dis()
     if abs(pos - target) > 10:
-        y_speed = speed * (pos - target) / kx
-    if abs(distance - 10) > 5:
-        x_speed = speed * (distance - 10) / ky
+        y_speed = speed * (pos - target) / ky
+    if abs(distance - 15) > 3:
+        x_speed = speed * (distance - 10) / kx
     x_speed = x_speed if x_speed <= max_speed else max_speed
     x_speed = x_speed if x_speed >= -max_speed else -max_speed
     y_speed = y_speed if y_speed <= max_speed else max_speed
@@ -91,44 +71,32 @@ def grab(arm, gripper, chassis):
     #time.sleep(1)
     #gripper.pause()
     arm.move(x=0, y=90).wait_for_completed()  # TODO 调参
-    arm.move(x=140, y=0).wait_for_completed()  # TODO 调参
+    arm.move(x=100, y=0).wait_for_completed()  # TODO 调参
     gripper.close(power=50)
 
     time.sleep(1)
-    chassis.move(x = -0.1, y = 0, xy_speed = 0.5).wait_for_completed()
-    arm.move(x=-140, y=0).wait_for_completed()  # TODO 调参
-    arm.move(x = 0, y = -90).wait_for_completed()
+    arm.move(x=0, y=20).wait_for_completed()
+    chassis.move(x = -0.2, y = 0, xy_speed = 0.5).wait_for_completed()
+    arm.move(x=-100, y=0).wait_for_completed()  # TODO 调参
+    arm.move(x = 0, y = -100).wait_for_completed()
     #arm.recenter().wait_for_completed()
     print("catch end")
 
 def place(arm, gripper, chassis):
-    print("put start")
-    # time.sleep(3)
-    arm.recenter().wait_for_completed()
-
-    # time.sleep(1)
-    # gripper.pause()
-    arm.move(x=0, y=90).wait_for_completed()  # TODO 调参
-    arm.move(x=140, y=0).wait_for_completed()  # TODO 调参
-    gripper.open(power=50)
-
     time.sleep(1)
-    chassis.move(x=-0.3, y=0, xy_speed=0.5).wait_for_completed()
-    arm.move(x=-140, y=0).wait_for_completed()  # TODO 调参
-    arm.recenter().wait_for_completed()
-    # arm.move(x=0, y=90).wait_for_completed()  # TODO 调参
-    # arm.move(x=140, y=0).wait_for_completed()  # TODO 调参
-    # gripper.open(power=50)
-    #
-    # #time.sleep(1)
-    # arm.move(x=-120, y=0).wait_for_completed()  # TODO 调参
-    # arm.recenter().wait_for_completed()
-    #
-    # time.sleep(1)
-    # gripper.pause()
+    print("put start")
+    arm.moveto(x=0, y=150).wait_for_completed()  # TODO 调参
+    arm.move(x=180, y=0).wait_for_completed()  # TODO 调参
+    gripper.open(power=50)
     print("put end")
 
-def move(chassis, camera, vision, pid_ctrl, target_color = 'blue', base_speed = 20, start_angle = 0):
+    time.sleep(1)
+    chassis.move(x=-0.2, y=0, xy_speed=0.5).wait_for_completed()
+    arm.move(x=-80, y=0).wait_for_completed()  # TODO 调参
+    arm.recenter().wait_for_completed()
+    print("arm position adjust")
+
+def move(arm, chassis, camera, vision, pid_ctrl, target_color = 'blue', base_speed = 25, start_angle = 0, end_dis = 100):
     if start_angle != 0: #turn left
         chassis.move(x = 0, y = 0, z = start_angle, z_speed = 180).wait_for_completed()
     quit_count = 0
@@ -162,8 +130,34 @@ def move(chassis, camera, vision, pid_ctrl, target_color = 'blue', base_speed = 
     chassis.drive_wheels(0, 0, 0, 0)
     result_line = vision.unsub_detect_info(name = 'line')
     cv2.destroyAllWindows()
-    while tof.dis() > 100:
-        chassis.drive_speed(x = 0.1, y = 0, z = 0)
+    arm.moveto(x = 0, y = 30).wait_for_completed()
+    while tof.dis() > end_dis:
+        chassis.drive_speed(x = 0.1, y = 0, z = 0, timeout = 0.1)
         print(tof.dis())
     chassis.drive_speed(x = 0, y = 0, z = 0)
     print("move finished")
+
+if __name__ == "__main__":
+    ep_robot = robot.Robot()
+    ep_robot.initialize('ap')
+    ep_camera = ep_robot.camera
+    ep_camera.start_video_stream(display=False)
+    ep_arm = ep_robot.robotic_arm
+    ep_arm.recenter().wait_for_completed()
+    # grab(ep_arm, ep_robot.gripper, ep_robot.chassis)
+    # place(ep_arm, ep_robot.gripper, ep_robot.chassis)
+
+    pid = setup(ep_robot, kp = 62, ki = 5, kd = 43)
+    # base_speed p i d
+    # 55, 62, 0.1, 55  稳定循迹,但第二个弯会过调 速度提升至50后，转弯后直线段会过调
+    # 80, 62, 0.1, 43  较快，出弯进直线调整慢，但是大致轨迹是直线的
+
+
+    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.5).wait_for_completed()
+    move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=75, start_angle=180)
+
+    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.5).wait_for_completed()
+    move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=80, start_angle=190)
+
+    ep_robot.close()
+    
