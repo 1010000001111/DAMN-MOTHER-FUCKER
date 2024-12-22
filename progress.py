@@ -19,7 +19,7 @@ def setup(ep_robot, kp = 50, ki = 2, kd = 20):
 
 def on_detect_line(line_info):
     line.clear()
-    print('line_type', line_info[0])
+    # print('line_type', line_info[0])
     for index, item in enumerate(line_info):
         if index == 0:
             continue
@@ -50,9 +50,10 @@ def seek(chassis, pos, speed = 5, target = 550, kx = 1, ky = 1, max_speed = 0.2)
     x_speed = 0
     y_speed = 0
     distance = tof.dis()
+    print(distance)
     if abs(pos - target) > 10:
         y_speed = speed * (pos - target) / ky
-    if abs(distance - 15) > 3:
+    if abs(distance - 30) > 2:
         x_speed = speed * (distance - 10) / kx
     x_speed = x_speed if x_speed <= max_speed else max_speed
     x_speed = x_speed if x_speed >= -max_speed else -max_speed
@@ -153,10 +154,10 @@ if __name__ == "__main__":
     # 80, 62, 0.1, 43  较快，出弯进直线调整慢，但是大致轨迹是直线的
 
 
-    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.5).wait_for_completed()
+    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
     move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=75, start_angle=180)
 
-    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.5).wait_for_completed()
+    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
     move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=80, start_angle=190)
 
     ep_robot.close()

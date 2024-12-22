@@ -24,10 +24,10 @@ def detect(cv2img, show_results = False):
     __categories__ = predictions[:, 5].numpy().tolist()
     if show_results:
         __results__.show()
-        print(__results__)
-        print(__boxes__)
-        print(__scores__)
-        print(__categories__)
+        # print(__results__)
+        # print(__boxes__)
+        # print(__scores__)
+        # print(__categories__)
 
     return __boxes__, __scores__, __categories__, __names__
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     ep_arm = ep_robot.robotic_arm
     ep_arm.recenter().wait_for_completed()
     ep_robot.led.set_led(comp = led.COMP_ALL, r = 255, g = 255, b = 255, effect = led.EFFECT_ON)
-    pid = progress.setup(ep_robot, kp = 145, ki = 6, kd = 105)
+    pid = progress.setup(ep_robot, kp = 145, ki = 6, kd = 125)
 
     ep_robot.gripper.open()
     time.sleep(1)
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     time_dif = fruit()
     progress.grab(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
     ep_robot.chassis.move(x = 0, y = time_dif / 10, z = 0, xy_speed = 0.5).wait_for_completed()
-    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 100)
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 90)
     time.sleep(1)
     progress.place(arm = ep_robot.robotic_arm, gripper = ep_robot.gripper, chassis= ep_robot.chassis)
     print("first lap finished")
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     time_dif = fruit()
     progress.grab(arm = ep_arm, gripper = ep_robot.gripper, chassis = ep_robot.chassis)
     ep_robot.chassis.move(x = 0, y = time_dif / 10, z = 0, xy_speed = 0.7).wait_for_completed()
-    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 100)
+    progress.move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='red', base_speed=100, start_angle=190, end_dis = 90)
     time.sleep(1)
     progress.place(arm = ep_robot.robotic_arm, gripper = ep_robot.gripper, chassis= ep_robot.chassis)
     print("second lap finished")
