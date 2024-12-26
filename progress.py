@@ -5,6 +5,7 @@ import tof
 import pytesseract
 import pointinfo
 import markerinfo
+import keyboard
 from PIL import Image
 from robomaster import robot
 
@@ -47,14 +48,15 @@ def recognize(camera):
     return result
 
 def seek(chassis, pos, speed = 5, target = 550, kx = 1, ky = 1, max_speed = 0.2):
+    dist = 33 #tiaocan
     x_speed = 0
     y_speed = 0
     distance = tof.dis()
     print(distance)
     if abs(pos - target) > 10:
         y_speed = speed * (pos - target) / ky
-    if abs(distance - 30) > 2:
-        x_speed = speed * (distance - 10) / kx
+    if abs(distance - dist) > 2:
+        x_speed = speed * (distance - dist) / kx
     x_speed = x_speed if x_speed <= max_speed else max_speed
     x_speed = x_speed if x_speed >= -max_speed else -max_speed
     y_speed = y_speed if y_speed <= max_speed else max_speed
@@ -133,7 +135,7 @@ def move(arm, chassis, camera, vision, pid_ctrl, target_color = 'blue', base_spe
     cv2.destroyAllWindows()
     arm.moveto(x = 0, y = 30).wait_for_completed()
     while tof.dis() > end_dis:
-        chassis.drive_speed(x = 0.1, y = 0, z = 0, timeout = 0.1)
+        chassis.drive_speed(x = 0.2, y = 0, z = 0, timeout = 0.1)
         print(tof.dis())
     chassis.drive_speed(x = 0, y = 0, z = 0)
     print("move finished")
@@ -141,6 +143,7 @@ def move(arm, chassis, camera, vision, pid_ctrl, target_color = 'blue', base_spe
 if __name__ == "__main__":
     ep_robot = robot.Robot()
     ep_robot.initialize('ap')
+    setup(ep_robot, kp = 62, ki = 5, kd = 43)
     ep_camera = ep_robot.camera
     ep_camera.start_video_stream(display=False)
     ep_arm = ep_robot.robotic_arm
@@ -148,17 +151,19 @@ if __name__ == "__main__":
     # grab(ep_arm, ep_robot.gripper, ep_robot.chassis)
     # place(ep_arm, ep_robot.gripper, ep_robot.chassis)
 
-    pid = setup(ep_robot, kp = 62, ki = 5, kd = 43)
-    # base_speed p i d
-    # 55, 62, 0.1, 55  稳定循迹,但第二个弯会过调 速度提升至50后，转弯后直线段会过调
-    # 80, 62, 0.1, 43  较快，出弯进直线调整慢，但是大致轨迹是直线的
-
-
-    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
-    move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=75, start_angle=180)
-
-    ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
-    move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=80, start_angle=190)
+    # pid = setup(ep_robot, kp = 62, ki = 5, kd = 43)
+    # # base_speed p i d
+    # # 55, 62, 0.1, 55  稳定循迹,但第二个弯会过调 速度提升至50后，转弯后直线段会过调
+    # # 80, 62, 0.1, 43  较快，出弯进直线调整慢，但是大致轨迹是直线的
+    #
+    #
+    # ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
+    # move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=75, start_angle=180)
+    #
+    # ep_robot.chassis.move(x = -0.2, y = 0, xy_speed = 0.7).wait_for_completed()
+    # move(arm=ep_arm,chassis=ep_robot.chassis, camera=ep_robot.camera, vision=ep_robot.vision, pid_ctrl=pid, target_color='blue', base_speed=80, start_angle=190)
+    while not keyboard.is_pressed("esc"):
+        print(tof.dis())
 
     ep_robot.close()
     
